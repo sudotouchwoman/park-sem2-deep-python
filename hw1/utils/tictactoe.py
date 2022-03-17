@@ -1,4 +1,13 @@
 class TicTacToe:
+    '''
+    The class to handle everything related to the game,
+    i.e. the board and input callbacks
+
+    Arguments:
+
+    + `board_size`: int, the board size
+    + `input_callers`, sequence of callable objects, the input callbacks
+    '''
     def __init__(self, board_size: int, *input_callers) -> None:
         self.__val_args(board_size, *input_callers)
         self.board_size = board_size
@@ -7,9 +16,16 @@ class TicTacToe:
         self.input_callers = input_callers
 
     def play(self):
+        '''
+        Game loop as a generator
+        on each step, yields the board state and the
+        result of the last move (whether it was successful or not)
+        '''
         yield self.board, True
 
-        while self.winner is None:
+        # play while the winner is not found and there
+        # still is some empty space on the board
+        while self.winner is None and None in self.board:
             for caller in self.input_callers:
                 state = False
                 while not state:
@@ -17,6 +33,7 @@ class TicTacToe:
                     state = self.__make_move(x, y, mark)
                     yield self.board, state
                 self.winner = self.__game_step()
+                # if the winner was actually found
                 if self.winner is not None: break
 
         yield self.board, True
@@ -32,6 +49,10 @@ class TicTacToe:
         return True
 
     def __game_step(self):
+        '''
+        Iterate over the board and check all the feasible
+        positions on the board (rows, columns and the main diagonals)
+        '''
         def iter_rows():
             for i in range(0, self.board_size**2, self.board_size):
                 from_ = i
@@ -59,11 +80,13 @@ class TicTacToe:
             if len(col) == 1: return min(col)
 
         main_diag, secondary_diag = set(iter_main_diag()), set(iter_secondary_diag())
+
         if len(main_diag) == 1: return min(main_diag)
         if len(secondary_diag) == 1: return min(secondary_diag)
 
 
     def __val_args(self, board_size: int, *input_callers) -> None:
+        # validate the arguments provided to the class constructor
         if not isinstance(board_size, int):
             raise TypeError(f"Expected integer board size")
         for i, caller in enumerate(input_callers):

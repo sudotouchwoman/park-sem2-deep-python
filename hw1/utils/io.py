@@ -11,8 +11,17 @@ def default_user_action_factory(
     in_stream: StringIO = stdin,
     out_stream: StringIO = stdout
 ):
+    '''
+    Create a function to fetch inputs
+    from user (in the default case, from the console)
+    This function is used in `PlayTicTacToe` when the
+    `on_move` argument is not provided
+    '''
     def default_action():
-        print(prompt, file=out_stream)
+        out_stream.write(prompt)
+        # this implementation does not raise, thus
+        # if there is an incorrect input, the user will be prompted
+        # to input again
         try: x, y = map(int, in_stream.readline().split(delim))
         except ValueError: return -1, -1, mark
         else: return x, y, mark
@@ -21,6 +30,8 @@ def default_user_action_factory(
 
 
 def default_error_handler(state):
+    # default error handler will raise an exception
+    # and the game loop will abort
     if not state: raise ValueError(f"The input provided is invalid")
 
 
@@ -36,7 +47,7 @@ def PlayTicTacToe(
     delim: str = ':',
 ):
     if prompts is None and on_action is None:
-        raise ValueError(f'Should provide a set of either prompts or actions')
+        raise TypeError(f'Should provide a set of either prompts or actions')
 
     actions = (
         default_user_action_factory(prompt, delim, mark)

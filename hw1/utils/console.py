@@ -8,7 +8,27 @@ def TTTinTerminal(
     verbose: bool = True,
     delim: str = ':',
     figlet_font: str = 'big'
-):
+) -> None:
+    '''
+    Play Tic-tac-toe in the terminal (human vs. human)
+
+    Arguments:
+
+    + `board_size`: int (default 3), the board size
+    + `verbose`: bool (default `True`), whether to print to the stdout
+    + `delim`: str (default ':'), the coordinates delimeter
+    + `figlet_font`: str (default 'big'), the font to use when formatting prompts
+
+    Returns: `None`
+
+    The default board is of 3x3 shape. In order to make a move,
+    one should write a combination of numbers (X and Y coordinates)
+    separated by a delimeter (`delim` argument)
+
+    The text written into the terminal is pretty-formatted with figlet,
+    one may specify the desired font via `figlet_font` argument
+    '''
+
     def iter_board_rows(board):
         for i in range(0, board_size**2, board_size):
             from_ = i
