@@ -8,6 +8,7 @@ class TicTacToe:
     + `board_size`: int, the board size
     + `input_callers`, sequence of callable objects, the input callbacks
     '''
+
     def __init__(self, board_size: int, *input_callers) -> None:
         self.__val_args(board_size, *input_callers)
         self.board_size = board_size

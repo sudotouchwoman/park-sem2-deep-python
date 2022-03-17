@@ -17,6 +17,7 @@ def default_user_action_factory(
     This function is used in `PlayTicTacToe` when the
     `on_move` argument is not provided
     '''
+
     def default_action():
         out_stream.write(prompt)
         # this implementation does not raise, thus
@@ -50,9 +51,13 @@ def PlayTicTacToe(
         raise TypeError(f'Should provide a set of either prompts or actions')
 
     actions = (
-        default_user_action_factory(prompt, delim, mark)
-        for prompt, mark in zip(prompts, marks)
-    ) if on_action is None else on_action
+        (
+            default_user_action_factory(prompt, delim, mark)
+            for prompt, mark in zip(prompts, marks)
+        )
+        if on_action is None
+        else on_action
+    )
 
     game = TicTacToe(board_size, *actions)
     on_start()
