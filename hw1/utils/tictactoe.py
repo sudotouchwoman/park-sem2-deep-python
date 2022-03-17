@@ -24,12 +24,14 @@ class TicTacToe:
         '''
         yield self.board, True
 
+        has_empty = lambda: None in self.board
+
         # play while the winner is not found and there
         # still is some empty space on the board
-        while self.winner is None and None in self.board:
+        while self.winner is None and has_empty():
             for caller in self.input_callers:
                 state = False
-                while not state:
+                while not state and has_empty():
                     x, y, mark = caller()
                     state = self.__make_move(x, y, mark)
                     yield self.board, state
@@ -72,7 +74,7 @@ class TicTacToe:
         def iter_secondary_diag():
             for i, cell in enumerate(self.board):
                 x, y = divmod(i, self.board_size)
-                if self.board_size - x == y: yield cell
+                if self.board_size - 1 - x == y: yield cell
 
         for row in map(set, iter_rows()):
             if len(row) == 1: return min(row)

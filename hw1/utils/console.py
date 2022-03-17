@@ -53,7 +53,8 @@ def TTTinTerminal(
 
     def on_win(winner):
         if not verbose: return
-        winner = prompt_formatter.renderText(f'Player {winner} Wins!')
+        text = 'We have a draw!' if winner is None else f'Player {winner} Wins!'
+        winner = prompt_formatter.renderText(text)
         print(winner)
 
     def on_start():
