@@ -28,10 +28,10 @@ def TTTinTerminal(
             to_ = i + board_size
             yield board[from_:to_]
 
-    empty_handler = lambda text: ' ' * 4 if text is None else text
+    empty_handler = lambda text: ' ' * 1 if text is None else text
 
     marks = ('X', 'O')
-    prompts = (f'Player {mark} moves (X, Y):\t' for mark in marks)
+    prompts = (f'\nPlayer {mark} moves (X, Y):\t' for mark in marks)
 
     def on_move(board):
         if not verbose: return

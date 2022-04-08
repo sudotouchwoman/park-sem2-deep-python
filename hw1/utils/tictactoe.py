@@ -39,8 +39,6 @@ class TicTacToe:
                 # if the winner was actually found
                 if self.winner is not None: break
 
-        yield self.board, True
-
     def __make_move(self, x, y, mark) -> bool:
         if x < 0 or y < 0: return False
         idx = y * self.board_size + x
