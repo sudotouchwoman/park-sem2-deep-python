@@ -2,12 +2,11 @@ from utils.console import TTTinTerminal
 
 
 def main():
-    figlet_font = "small"
     delimeter = ","
     board_size = 3
     verbose = True
 
-    TTTinTerminal(board_size, verbose, delimeter, figlet_font)
+    TTTinTerminal(board_size, verbose, delimeter)
 
 
 if __name__ == "__main__":
