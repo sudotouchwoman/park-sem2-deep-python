@@ -1,2 +1,4 @@
 pytest~=7.1.0
+pytest-factoryboy
+pytest-mock
 black
