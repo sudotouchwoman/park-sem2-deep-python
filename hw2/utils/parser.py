@@ -48,6 +48,11 @@ class Tag:
         self.name = tag_name
         self.children = []
 
+    def add_item(self, subtag_or_content):
+        if type(subtag_or_content) not in (Tag, str):
+            raise TypeError(f'Expected Tag or string: {subtag_or_content}')
+        self.children.append(subtag_or_content)
+
     def subtags(self):
         return filter(lambda x: isinstance(x, Tag), self.children)
 
@@ -91,7 +96,7 @@ def parse_html(html: str):
 
     # helper function to fetch pattern
     # from the current html string
-    # and cut the matched slice from it
+    # and cut the matched slice out of it
     def pull(pattern: re.Pattern, handler) -> bool:
         nonlocal html
         match = pattern.match(html)
@@ -106,15 +111,15 @@ def parse_html(html: str):
 
         def open_tag_handler(tag):
             new_tag = Tag(tag)
-            node.children.append(new_tag)
+            node.add_item(new_tag)
             parse_content(new_tag)
 
-        def closed_tag_handler(_):
+        def closed_tag_handler(tag):
             nonlocal found_close_tag
             found_close_tag = True
 
         def content_handler(content):
-            node.children.append(content)
+            node.add_item(content)
 
         while not found_close_tag and html:
             if not (

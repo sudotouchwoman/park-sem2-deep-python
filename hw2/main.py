@@ -1,3 +1,7 @@
+"""
+Demo of HTML parsing
+The example is loaded from utils
+"""
 from utils.parser import parse_html, HTML
 
 
