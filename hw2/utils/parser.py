@@ -1,24 +1,29 @@
+"""
+Simple recursive parser for HTML
+using regular expressions
+"""
+
 from dataclasses import dataclass
 from abc import ABC
 import re
 
 
 class HTML(ABC):
+    """
+    Namespace for constants related to HTML tags regex,
+    with simple example document provided
+    """
+
     OPEN_TAG_REGEX = r"^<([!a-zA-z][a-zA-z0-9\-\s=\"\{\}\(\),\.;'_/:@]*)>"
     CLOSED_TAG_REGEX = r"^</([!a-zA-z][a-zA-z0-9\-\s=\"\{\}\(\),\.;'_/:@]*)>"
     DATA_REGEX = r"^([^<]+)"
     EXAMPLE = """
-<html lang="en">
+<html>
     <head>
-        <meta charset="utf-8">
-        <meta content="width=device-width, initial-scale=1"> 
         <title>{% block title %}{% endblock %}</title>
         {%block styles%}
-        <link href="{{ url_for('static', filename='css/menu.css') }}" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
         {%endblock%}
         {%block icon%}
-        <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='img/404.png') }}">
         {%endblock%}
     </head>
     <body>
@@ -31,33 +36,65 @@ class HTML(ABC):
 
 @dataclass
 class Tag:
+    """
+    Represents HTML tag, handles its contents
+    (inner tags and plain text)
+    """
 
     name: str
     children: list
 
-    def __init__(self, tag_name, root=False) -> None:
+    def __init__(self, tag_name) -> None:
         self.name = tag_name
         self.children = []
-        self.root = root
 
-    def describe(self, on_open, on_close, on_content):
-        if not self.root: on_open(self.name)
-        content = ''.join(filter(lambda x: isinstance(x, str), self.children))
-        for tag in filter(lambda x: isinstance(x, Tag), self.children):
+    def subtags(self):
+        return filter(lambda x: isinstance(x, Tag), self.children)
+
+    def content(self):
+        return filter(lambda x: isinstance(x, str), self.children)
+
+    def describe(self, on_open, on_close, on_content, skip_root=False):
+        '''
+        Recursively traverses the tag tree.
+
+        Arguments:
+            `on_open`, `on_close`: callbacks, is called with tag's name as argument
+            `on_content`: callback, is called with the tag's inner plain text as argument
+            `skip_root`: `bool`, whether to trigger callbacks on self
+        '''
+        if not skip_root: on_open(self.name)
+        for tag in self.subtags():
             tag.describe(on_open, on_close, on_content)
-        if not self.root: on_content(content)
-        if not self.root: on_close(self.name)
+        content = "".join(self.content())
+        if not skip_root: on_content(content)
+        if not skip_root: on_close(self.name)
 
 
-def parse_html(html: str, on_open_tag, on_closed_tag, on_content):
+def parse_html(html: str):
+    '''
+    Parse given html string (in a recursive manner)
+    Arguments:
+        `html`: `str`, string to parse
+    Returns:
+        `Tag` object with root of the DOM tree
+    Raises:
+        `TypeError` if not a string was given
+        `RuntimeError` if parsing error is encountered
+    '''
+    if not isinstance(html, str): raise TypeError(f'Expected HTML string object')
+
     open_tag_regex, closed_tag_regex, content_regex = map(
         re.compile,
         (HTML.OPEN_TAG_REGEX, HTML.CLOSED_TAG_REGEX, HTML.DATA_REGEX),
     )
 
-    def pull(regex: re.Pattern, handler) -> bool:
+    # helper function to fetch pattern
+    # from the current html string
+    # and cut the matched slice from it
+    def pull(pattern: re.Pattern, handler) -> bool:
         nonlocal html
-        match = regex.match(html)
+        match = pattern.match(html)
         if not match: return False
         html = html[match.end() :]
         handler(match.group())
@@ -87,16 +124,6 @@ def parse_html(html: str, on_open_tag, on_closed_tag, on_content):
             ):
                 raise RuntimeError(f"Parsing Error: {html}")
 
-    root = Tag('root', root=True)
+    root = Tag('root')
     parse_content(root)
-    root.describe(on_open_tag, on_closed_tag, on_content)
-
-
-if __name__ == "__main__":
-    html = HTML.EXAMPLE
-
-    on_open = lambda t: print(f"Opened tag: {t}")
-    on_close = lambda t: print(f"Closed tag: {t}")
-    on_content = lambda c: print(f"Found content: {c}") if c.strip() else None
-
-    parse_html(html, on_open, on_close, on_content)
+    return root
