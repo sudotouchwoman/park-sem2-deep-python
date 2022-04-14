@@ -1,8 +1,20 @@
+"""
+Metaclass factory implementation
+"""
+
+
+
 from typing_extensions import Self
 from typing import Any, Callable, Dict
 
 
 def metaclass_factory(transform: Callable = None, value_transform: Callable = None):
+    """
+    Create new custom metaclass which performs provided
+    `transform` and `value_transform` mappings of class attributes
+
+    By default, no changes are done to the attributes and their names
+    """
     is_dunder_method = lambda attr: attr.startswith("__") and attr.endswith("__")
     _transform = _value_transform = lambda x: x
 

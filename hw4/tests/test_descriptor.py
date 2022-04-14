@@ -1,3 +1,14 @@
+"""
+Unit-tests for type descriptors implementation
+
+Checks are performed on required basic data types (str, int)
+As well as on arbitrary set of classes
+
+Note: under the hood, `isinstance` check is done,
+thus `typed_descriptor` does not imply strict typing
+"""
+
+
 import pytest
 
 from utils.descriptor import Integer, PositiveInteger, String, typed_descriptor, type_hint

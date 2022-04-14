@@ -1,3 +1,12 @@
+"""
+Module contains typed descriptor templates and also several
+descriptors for common types: Integers, Positive integers and Strings
+
+One can inherit from `Descriptor` in order to perofrm more
+specific and complicated checks on values
+"""
+
+
 def type_hint(expected_type):
     def hint(value):
         if isinstance(value, expected_type): return
