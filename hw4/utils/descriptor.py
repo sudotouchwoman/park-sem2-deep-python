@@ -27,7 +27,7 @@ def typed_descriptor(expected_type: type):
         raise TypeError(f"Expected a class, got {type(expected_type)}")
 
     # first empty (self) argument is required to bind as a method
-    # original version of this function is left in the outer score
+    # original version of this function is left in the outer scope
     # as a quick helper
     def make_type_hint(expected_type):
         def hint(_, value):

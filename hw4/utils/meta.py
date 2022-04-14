@@ -3,7 +3,6 @@ Metaclass factory implementation
 """
 
 
-
 from typing_extensions import Self
 from typing import Any, Callable, Dict
 
@@ -24,9 +23,7 @@ def metaclass_factory(transform: Callable = None, value_transform: Callable = No
         _value_transform = lambda attr: transform(attr)
 
     class Meta:
-        def __new__(
-            cls, name: str, bases: Any, attrs: Dict[str, Any]
-        ) -> Self:
+        def __new__(cls, name: str, bases: Any, attrs: Dict[str, Any]) -> Self:
             custom_attrs = {
                 _transform(key): _value_transform(value) for key, value in attrs.items()
             }
