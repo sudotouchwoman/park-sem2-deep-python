@@ -113,11 +113,14 @@ def test_attribute_setting(prefix, add_prefix):
         def __init__(self) -> None:
             self.instance_attr = "instance value"
 
+        def __repr__(self) -> str:
+            return "merely a sample class"
+
     # this test is more manual but checks all of the
     # possible caveats
     instance = SampleClass()
     assert hasattr(SampleClass, prefix + "_SampleClass__y")
-    assert not hasattr(SampleClass, "_Sampleclass_y")
+    assert not hasattr(SampleClass, "_SampleClass__y")
 
     assert getattr(SampleClass, "__some_dunder_attribute__") == "some value"
     assert getattr(instance, "__some_dunder_attribute__") == "some value"
@@ -127,14 +130,16 @@ def test_attribute_setting(prefix, add_prefix):
     assert getattr(instance, prefix + "instance_attr") == "instance value"
 
     # new attribute should be also dynamically renamed
-    instance.new_attribute = 5
-    assert not hasattr(instance, "new_attribute")
-    assert getattr(instance, prefix + "new_attribute") == 5
+    instance.dynamic = 5
+    assert not hasattr(instance, "dynamic")
+    assert getattr(instance, prefix + "dynamic") == 5
 
     instance.f = lambda: "hello from f"
 
     assert not hasattr(instance, "f")
     assert getattr(instance, prefix + "f")() == "hello from f"
+
+    assert str(instance) == "merely a sample class"
 
     # and at last
     for attribute in (a for a in dir(instance) if not is_dunder_method(a)):

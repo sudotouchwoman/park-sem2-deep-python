@@ -93,9 +93,9 @@ class PositiveInteger(Integer):
 
     # note the overriden __init__ and __call__ methods
     def __set__(self, obj, newvalue):
-        super().__set__(obj, newvalue)
         PositiveInteger.__value_hint(newvalue)
+        super().__set__(obj, newvalue)
 
     def __init__(self, default_value=0) -> None:
-        super().__init__(default_value)
         PositiveInteger.__value_hint(default_value)
+        super().__init__(default_value)

@@ -11,12 +11,19 @@ thus `typed_descriptor` does not imply strict typing
 
 import pytest
 
-from utils.descriptor import Integer, PositiveInteger, String, typed_descriptor, type_hint
+from utils.descriptor import (
+    Integer,
+    PositiveInteger,
+    String,
+    typed_descriptor,
+    type_hint,
+)
 
 
 @pytest.fixture
 def classes():
     return int, str, list, tuple
+
 
 @pytest.fixture
 def another_class():
@@ -43,7 +50,6 @@ def test_default_values():
         positive = PositiveInteger()
         string = String()
 
-
     data = SampleContainer()
     assert type(data.integer) is int
     assert type(data.positive) is int
@@ -57,6 +63,7 @@ def test_default_values():
 def test_typed_property(classes, another_class):
     for cls in classes:
         cls_descriptor = typed_descriptor(cls)
+
         class SampleContainer:
             data = cls_descriptor()
 
@@ -67,34 +74,65 @@ def test_typed_property(classes, another_class):
         with pytest.raises(TypeError) as exc_info:
             invalid_class_instance = another_class()
             container.data = invalid_class_instance
-        assert isinstance(exc_info.value, TypeError) 
+        assert isinstance(exc_info.value, TypeError)
 
 
 @pytest.fixture
-def positive_ok():
+def positive_int():
     return 42
 
 
 @pytest.fixture
-def positive_invalid():
+def negative_int():
     return -42
 
 
-def test_positive(positive_ok, positive_invalid):
+def test_positive(positive_int, negative_int):
     class SampleContainer:
-        pos = PositiveInteger(positive_ok)
+        pos = PositiveInteger(positive_int)
 
     data = SampleContainer()
-    assert type(data.pos) == int    
-    assert data.pos == positive_ok
+    assert type(data.pos) == int
+    assert data.pos == positive_int
 
     with pytest.raises(ValueError) as exc_info:
-        data.pos = positive_invalid
+        data.pos = negative_int
     assert isinstance(exc_info.value, ValueError)
 
     with pytest.raises(ValueError) as exc_info:
         # attempt to pass invalid initial value into descriptor
         class SampleContainer:
-            pos = PositiveInteger(positive_invalid)
+            pos = PositiveInteger(negative_int)
+
     assert isinstance(exc_info.value, ValueError)
-    
+
+
+def test_bad_assignment(positive_int, negative_int):
+    # check that descriptors manage to conserve their
+    # value in case of inappropriate assignment
+    class SampleContainer:
+        positive = PositiveInteger(positive_int)
+        ordinary_integer = Integer(-1)
+        ordinary_string = String("special string")
+
+    data = SampleContainer()
+
+    with pytest.raises(TypeError) as exc_info:
+        data.positive = "this is not an integer"
+    assert isinstance(exc_info.value, TypeError)
+    assert data.positive == positive_int
+
+    with pytest.raises(ValueError) as exc_info:
+        data.positive = negative_int
+    assert isinstance(exc_info.value, ValueError)
+    assert data.positive == positive_int
+
+    with pytest.raises(TypeError) as exc_info:
+        data.ordinary_integer = "this is not an integer"
+    assert isinstance(exc_info.value, TypeError)
+    assert data.ordinary_integer == -1
+
+    with pytest.raises(TypeError) as exc_info:
+        data.ordinary_string = 3.1415
+    assert isinstance(exc_info.value, TypeError)
+    assert data.ordinary_string == "special string"
