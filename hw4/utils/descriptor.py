@@ -9,8 +9,11 @@ specific and complicated checks on values
 
 def type_hint(expected_type):
     def hint(value):
-        if isinstance(value, expected_type): return
-        raise TypeError(f"Invalid type: expected {expected_type}, got {type(value)}")
+        if isinstance(value, expected_type):
+            return
+        raise TypeError(
+            f"Invalid type: expected {expected_type}, got {type(value)}"
+        )
 
     return hint
 
@@ -31,8 +34,11 @@ def typed_descriptor(expected_type: type):
     # as a quick helper
     def make_type_hint(expected_type):
         def hint(_, value):
-            if isinstance(value, expected_type): return
-            raise TypeError(f"Invalid type: expected {expected_type}, got {type(value)}")
+            if isinstance(value, expected_type):
+                return
+            raise TypeError(
+                f"Invalid type: expected {expected_type}, got {type(value)}"
+            )
 
         return hint
 
@@ -44,6 +50,7 @@ def typed_descriptor(expected_type: type):
         Note that for more complicated descriptors,
         one should also override the constructor and validate the inputs
         """
+
         __value: expected_type
         __type_hint = make_type_hint(expected_type)
 
@@ -77,17 +84,17 @@ class PositiveInteger(Integer):
     """
     Positive integer descriptor
     """
+
     @staticmethod
     def __value_hint(newvalue):
-        if newvalue >= 0: return
+        if newvalue >= 0:
+            return
         raise ValueError(f"Integer provided must be positive, got {newvalue}")
-
 
     # note the overriden __init__ and __call__ methods
     def __set__(self, obj, newvalue):
         super().__set__(obj, newvalue)
         PositiveInteger.__value_hint(newvalue)
-
 
     def __init__(self, default_value=0) -> None:
         super().__init__(default_value)

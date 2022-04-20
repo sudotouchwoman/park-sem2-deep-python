@@ -1,12 +1,14 @@
-'''
+"""
 Unit tests for custom metaclass factory
 Assertions are made on attribute access, their names and values
-'''
-from itertools import chain
-
+"""
 import pytest
 
-from utils.meta import metaclass_factory
+from utils.meta import (
+    metaclass_factory,
+    is_dunder_method,
+    attribute_mapping_factory,
+)
 
 
 def test_faker(faker):
@@ -14,6 +16,10 @@ def test_faker(faker):
 
 
 def test_meta():
+    # basic test for metaclass factory (type checks)
+    # when called without argument, factory
+    # creates metaclass which does practically nothing
+    # (it does not modify attributes in any way)
     sample_metaclass = metaclass_factory()
 
     class SampleClass(metaclass=sample_metaclass):
@@ -23,78 +29,114 @@ def test_meta():
     assert isinstance(SampleClass, type)
 
 
+def test_is_dunder_method():
+    # helper function to detect attributes that are unlikely to
+    # be user-specific, thus usually should not be modified
+    # by metaclass
+    dunder_attributes = ("__new__", "__init__", "__call__")
+    arbitrary_attributes = ("__private", "logger", "x", "y__", "z_")
+
+    assert all(map(is_dunder_method, dunder_attributes))
+    assert all(map(lambda x: not is_dunder_method(x), arbitrary_attributes))
+
+
+def test_mapping_factory(faker):
+    identity_mapping = attribute_mapping_factory(
+        lambda x: x, lambda y: y, skip_dunder=True
+    )
+    attr_name, attr_avlue = faker.name(), faker.email()
+    assert attr_name, attr_avlue == identity_mapping(attr_name, attr_avlue)
+
+
 @pytest.fixture
 def prefix():
     return "custom_"
 
 
 @pytest.fixture
-def is_dunder():
-    return lambda x: x.startswith("__") and x.endswith("__")
+def add_prefix():
+    def _add_prefix(prefix):
+        return attribute_mapping_factory(
+            # add provided prefix to attribute name
+            # do not modify the value and names of dunder
+            # methods/attributes
+            lambda a: prefix + a,
+            lambda v: v,
+            skip_dunder=True,
+        )
+
+    return _add_prefix
 
 
-def test_PrefixMeta(faker, prefix, is_dunder):
+def test_PrefixMeta(faker, prefix, add_prefix):
+    """
+    Test the required PrefixMeta metaclass
+    which adds `custom_` prefix to each non-dunder attribute
+    """
+
+    # create some dummy data:
+    # class attributes and their names
     bases = ()
     name = "_".join(faker.name().split())
     attrs = {"".join(faker.name().split()): faker.email() for _ in range(100)}
     attrs.update({item: None for item in dir(faker)})
 
-    sample_metaclass = metaclass_factory(transform=lambda a: prefix + a)
+    sample_metaclass = metaclass_factory(mapping=add_prefix(prefix))
     SampleClass = sample_metaclass(name, bases, attrs)
 
+    # check all the attributes of new class
+    # if it is not magic (dunder),
+    # it should start with specified prefix
     for attr in dir(SampleClass):
         assert isinstance(attr, str)
-        if not is_dunder(attr):
+        if not is_dunder_method(attr):
             assert attr.startswith(prefix)
             *_, attr = attr.partition(prefix)
         assert attr in attrs.keys()
 
 
-def test_attribute_access(prefix, is_dunder):
-    transform = lambda a: prefix + a
-    sample_metaclass = metaclass_factory(transform=transform)
+def test_attribute_setting(prefix, add_prefix):
+    """
+    Ensure that the attributes set in `__init__` or
+    anywhere else at the scope of instance are mapped
+    correctly
+    """
 
-    class SampleClass:
-        x = 0
-        y = 10
-        __private = "private attribute"
-        _protected = "protected attribute"
-
-        def __init__(self) -> None:
-            pass
-
-        def some_method(self):
-            return "some_value"
-
-    original_attributes = [attr for attr in dir(SampleClass) if not is_dunder(attr)]
-    magic_attributes = [attr for attr in dir(SampleClass) if is_dunder(attr)]
+    sample_metaclass = metaclass_factory(mapping=add_prefix(prefix))
 
     class SampleClass(metaclass=sample_metaclass):
-        x = 0
-        y = 10
-        __private = "private attribute"
-        _protected = "protected attribute"
+        x = 5
+        _z = "value"
+        __y = "private"
+        __some_dunder_attribute__ = "some value"
 
         def __init__(self) -> None:
-            pass
+            self.instance_attr = "instance value"
 
-        def some_method(self):
-            return "expected_value"
-
+    # this test is more manual but checks all of the
+    # possible caveats
     instance = SampleClass()
+    assert hasattr(SampleClass, prefix + "_SampleClass__y")
+    assert not hasattr(SampleClass, "_Sampleclass_y")
 
-    for attr in chain(magic_attributes, map(transform, original_attributes)):
-        assert hasattr(SampleClass, attr)
-        assert hasattr(instance, attr)
+    assert getattr(SampleClass, "__some_dunder_attribute__") == "some value"
+    assert getattr(instance, "__some_dunder_attribute__") == "some value"
 
-    for attr in chain(original_attributes, map(transform, magic_attributes)):
-        with pytest.raises(AttributeError) as exc_info:
-            getattr(instance, attr)
-        assert isinstance(exc_info.value, AttributeError)
+    # test for instance-scope attributes
+    # and `__setattr__`
+    assert getattr(instance, prefix + "instance_attr") == "instance value"
 
-    with pytest.raises(AttributeError) as exc_info:
-        instance.some_method()
-    assert isinstance(exc_info.value, AttributeError)
+    # new attribute should be also dynamically renamed
+    instance.new_attribute = 5
+    assert not hasattr(instance, "new_attribute")
+    assert getattr(instance, prefix + "new_attribute") == 5
 
-    bound_method = getattr(instance, transform("some_method"))
-    assert bound_method() == "expected_value"
+    instance.f = lambda: "hello from f"
+
+    assert not hasattr(instance, "f")
+    assert getattr(instance, prefix + "f")() == "hello from f"
+
+    # and at last
+    for attribute in (a for a in dir(instance) if not is_dunder_method(a)):
+        assert isinstance(attribute, str)
+        assert attribute.startswith(prefix)
