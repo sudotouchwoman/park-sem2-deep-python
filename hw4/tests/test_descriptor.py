@@ -136,3 +136,26 @@ def test_bad_assignment(positive_int, negative_int):
         data.ordinary_string = 3.1415
     assert isinstance(exc_info.value, TypeError)
     assert data.ordinary_string == "special string"
+
+
+def test_assignment():
+    # check that the descriptors' values can change
+    # if new valid values are given
+    class SampleContainer:
+        positive = PositiveInteger(10)
+        oridinary_integer = Integer(-50)
+        ordinary_string = String("a")
+
+    data = SampleContainer()
+
+    assert data.positive == 10
+    assert data.oridinary_integer == -50
+    assert data.ordinary_string == "a"
+
+    data.positive = 2
+    data.oridinary_integer = 777
+    data.ordinary_string = "b"
+
+    assert data.positive == 2
+    assert data.oridinary_integer == 777
+    assert data.ordinary_string == "b"
