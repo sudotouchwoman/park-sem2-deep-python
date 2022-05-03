@@ -87,10 +87,25 @@ def assert_elementwise_equal() -> Callable:
     return comparator
 
 
+<<<<<<< Updated upstream
 def test_basic_math(assert_elementwise_equal: Callable):
     # the lists are of different length
     a = [1, -1, 8, 5, -4]
     b = [4, 2, -5, 7]
+=======
+@pytest.fixture
+def a() -> List[int]:
+    return [1, -1, 8, 5, -4]
+
+
+@pytest.fixture
+def b() -> List[int]:
+    return [4, 2, -5, 7]
+
+
+def test_basic_math(assert_elementwise_equal: Callable, a, b):
+    # the lists are of different length
+>>>>>>> Stashed changes
 
     # copies are used to test the identity
     # i.e., the invariance of the instance
@@ -163,3 +178,41 @@ def test_basic_math(assert_elementwise_equal: Callable):
     assert_elementwise_equal(a, a_copy)
     assert_elementwise_equal(b, b_copy)
     assert sum(d) == a_sum - b_sum
+
+
+def test_inner_values(a, b, assert_elementwise_equal):
+    a_shiny, b_shiny = map(MyShinyList, (a, b))
+
+    def elementwise_add(x: List[int], y: List[int]) -> List[int]:
+        x, y = x.copy(), y.copy()
+        diff = len(y) - len(x)
+        if diff > 0:
+            x.extend((0 for _ in range(diff)))
+        elif diff < 0:
+            y.extend((0 for _ in range(abs(diff))))
+        return [xx + yy for xx, yy in zip(x, y)]
+
+    def elementwise_sub(x: List[int], y: List[int]) -> List[int]:
+        x, y = x.copy(), y.copy()
+        diff = len(y) - len(x)
+        if diff > 0:
+            x.extend((0 for _ in range(diff)))
+        elif diff < 0:
+            y.extend((0 for _ in range(abs(diff))))
+        return [xx - yy for xx, yy in zip(x, y)]
+
+    assert_elementwise_equal(
+        a_shiny + b_shiny, elementwise_add(a_shiny, b_shiny)
+    )
+    assert_elementwise_equal(a + b_shiny, elementwise_add(a, b_shiny))
+    assert_elementwise_equal(b_shiny + a, elementwise_add(b_shiny, a))
+    assert_elementwise_equal(b + a_shiny, elementwise_add(b, a_shiny))
+    assert_elementwise_equal(a_shiny + b, elementwise_add(a_shiny, b))
+
+    assert_elementwise_equal(
+        a_shiny - b_shiny, elementwise_sub(a_shiny, b_shiny)
+    )
+    assert_elementwise_equal(a - b_shiny, elementwise_sub(a, b_shiny))
+    assert_elementwise_equal(b_shiny - a, elementwise_sub(b_shiny, a))
+    assert_elementwise_equal(b - a_shiny, elementwise_sub(b, a_shiny))
+    assert_elementwise_equal(a_shiny - b, elementwise_sub(a_shiny, b))
