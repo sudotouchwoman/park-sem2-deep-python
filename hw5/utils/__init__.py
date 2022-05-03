@@ -1,3 +1,3 @@
-from .LRU import LRUCache
+from .lru import LRUCache
 
 __all__ = ["LRUCache"]
