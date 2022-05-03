@@ -1,4 +1,4 @@
-from typing import List
+from typing import Callable, Iterable, List
 
 import pytest
 from faker import Faker
@@ -36,6 +36,22 @@ def smaller(sample_data) -> List[int]:
     return [x - 1 for x in sample_data]
 
 
+def test_tricky_equilibrium():
+    # test that custom lists with different items
+    # but same sum are equal
+    a = [-1, 1, -1, 1]
+    b = [-2, 2, -2, 2, -2, 2]
+
+    a_shiny = MyShinyList(a)
+    b_shiny = MyShinyList(b)
+
+    assert a == b_shiny
+    assert b_shiny == a
+    assert a_shiny == b
+    assert b == a_shiny
+    assert a_shiny == b_shiny
+
+
 def test_spaceship(smaller: List[int], bigger: List[int]):
     # test name refers to the spaceship operator <=>
     # from C++ 20, which is basically a 3-in-1 comparator
@@ -61,7 +77,18 @@ def test_spaceship(smaller: List[int], bigger: List[int]):
     assert empty == empty_and_shiny
 
 
-def test_basic_math():
+@pytest.fixture
+def assert_elementwise_equal() -> Callable:
+    def comparator(x: Iterable, y: Iterable):
+        assert len(x) == len(y)
+        for xx, yy in zip(x, y):
+            assert xx == yy
+
+    return comparator
+
+
+def test_basic_math(assert_elementwise_equal: Callable):
+    # the lists are of different length
     a = [1, -1, 8, 5, -4]
     b = [4, 2, -5, 7]
 
@@ -79,6 +106,8 @@ def test_basic_math():
 
     assert a == a_shiny
     assert b == b_shiny
+    assert_elementwise_equal(a, a_shiny)
+    assert_elementwise_equal(b, b_shiny)
 
     # check all possible
     # configurations of addition and subtraction
@@ -86,18 +115,26 @@ def test_basic_math():
     assert isinstance(c, MyShinyList)
     assert b_shiny is b_shiny_copy
     assert a is a_copy
+    assert_elementwise_equal(b_shiny, b_shiny_copy)
+    assert_elementwise_equal(a, a_copy)
     assert sum(c) == a_sum + b_sum
 
     c = a_shiny + b
     assert isinstance(c, MyShinyList)
     assert a_shiny is a_shiny_copy
     assert b is b_copy
+    assert_elementwise_equal(a_shiny, a_shiny_copy)
+    assert_elementwise_equal(b, b_copy)
     assert sum(c) == a_sum + b_sum
 
     c = a_shiny + b_shiny
     assert isinstance(c, MyShinyList)
     assert a_shiny is a_shiny_copy and b_shiny is b_shiny_copy
     assert a is a_copy and b is b_copy
+    assert_elementwise_equal(a_shiny, a_shiny_copy)
+    assert_elementwise_equal(b_shiny, b_shiny_copy)
+    assert_elementwise_equal(a, a_copy)
+    assert_elementwise_equal(b, b_copy)
     assert sum(c) == a_sum + b_sum
 
     # test subtraction (the order matters now!)
@@ -105,16 +142,24 @@ def test_basic_math():
     assert isinstance(d, MyShinyList)
     assert b_shiny is b_shiny_copy
     assert a is a_copy
+    assert_elementwise_equal(b_shiny, b_shiny_copy)
+    assert_elementwise_equal(a, a_copy)
     assert sum(d) == a_sum - b_sum
 
     d = a_shiny - b
     assert isinstance(d, MyShinyList)
     assert a_shiny is a_shiny_copy
     assert b is b_copy
+    assert_elementwise_equal(a_shiny, a_shiny_copy)
+    assert_elementwise_equal(b, b_copy)
     assert sum(d) == a_sum - b_sum
 
     d = a_shiny - b_shiny
     assert isinstance(d, MyShinyList)
     assert a_shiny is a_shiny_copy and b_shiny is b_shiny_copy
     assert a is a_copy and b is b_copy
+    assert_elementwise_equal(a_shiny, a_shiny_copy)
+    assert_elementwise_equal(b_shiny, b_shiny_copy)
+    assert_elementwise_equal(a, a_copy)
+    assert_elementwise_equal(b, b_copy)
     assert sum(d) == a_sum - b_sum
