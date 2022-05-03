@@ -87,12 +87,6 @@ def assert_elementwise_equal() -> Callable:
     return comparator
 
 
-<<<<<<< Updated upstream
-def test_basic_math(assert_elementwise_equal: Callable):
-    # the lists are of different length
-    a = [1, -1, 8, 5, -4]
-    b = [4, 2, -5, 7]
-=======
 @pytest.fixture
 def a() -> List[int]:
     return [1, -1, 8, 5, -4]
@@ -105,7 +99,6 @@ def b() -> List[int]:
 
 def test_basic_math(assert_elementwise_equal: Callable, a, b):
     # the lists are of different length
->>>>>>> Stashed changes
 
     # copies are used to test the identity
     # i.e., the invariance of the instance
