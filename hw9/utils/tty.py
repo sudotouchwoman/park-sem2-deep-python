@@ -36,18 +36,18 @@ class TTYWorker:
     def __init__(self, capacity: int = CAPACITY) -> None:
         self.log = LOG_MANAGER.default_logger(__name__)
         self.cache = LRUCache(capacity=capacity)
-        click.secho(USAGE, fg="white")
+        click.secho(USAGE, fg="green")
 
     def run(self) -> None:
         while True:
             self.log.debug("Waiting for command")
-            command: str = click.prompt(">>> Enter command: ", type=str)
+            command: str = click.prompt(">>> Enter command", type=str)
             self.log.debug(msg=f"Recieved command: {command}")
 
             if command in (Command.ADD, Command.ADD_S):
                 key, value = click.prompt(
-                    ">>> Enter key-value pair separated by ':'", type=str
-                ).split(":")
+                    ">>> Enter key-value pair separated by '='", type=str
+                ).split("=")
                 self.cache[key] = value
                 continue
 

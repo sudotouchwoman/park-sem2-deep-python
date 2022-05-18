@@ -29,7 +29,7 @@ class LRUCache:
 
     def __setitem__(self, key: Hashable, value: Any) -> None:
         self.log.info(msg="Setting new key-value pair")
-        self.log.debug(msg=f"[{key} -> {value}]")
+        self.log.debug(msg=f"[{key}={value}]")
 
         self.cache[key] = value
         self.cache.move_to_end(key)
@@ -38,10 +38,10 @@ class LRUCache:
             self.log.warning(msg="Cache capacity limit reached")
             self.log.debug(msg="Dropping key-value pair")
             old_key, old_value = self.cache.popitem(last=False)
-            self.log.debug(msg=f"[{old_key} -> {old_value}]")
+            self.log.debug(msg=f"[{old_key}={old_value}]")
 
     def __repr__(self) -> str:
-        self.log.debug(msg="__repr__ called")
-        return f"LRUCache (capacity {self.capacity}); cache=[ " + " ".join(
-            (f"[{key}->{value}]" for key, value in self.cache.items()) + "]"
-        )
+        self.log.debug(msg="Called __repr__")
+        return f"LRUCache (capacity {self.capacity}); cache=[" + ", ".join(
+            (f"{key}={value}" for key, value in self.cache.items())
+        ) + "]"

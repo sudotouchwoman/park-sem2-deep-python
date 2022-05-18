@@ -1,17 +1,17 @@
 import click
 
-import utils
+from utils import LOG_MANAGER
+from utils.tty import TTYWorker
 
 
 @click.command()
 @click.option("-s", "--stream", is_flag=True, default=None)
 def main(stream):
-    utils.LOG_MANAGER.stream_logs() if stream else None
-
-    from utils.tty import TTYWorker
+    if stream:
+        LOG_MANAGER.stream_logs()
 
     TTYWorker().run()
 
 
 if __name__ == "__main__":
-    main()
+    main(None)
