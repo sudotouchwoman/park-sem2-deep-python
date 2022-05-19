@@ -18,7 +18,7 @@ class LRUCache:
     def __getitem__(self, key: Hashable) -> Optional[Any]:
         self.log.info(msg=f"Accessing key: {key}")
         if key not in self.cache:
-            self.log.warning(msg="Key was not found in cache")
+            self.log.error(msg="Key was not found in cache")
             return None
         self.log.debug(msg="Found key, moving to the end")
         self.cache.move_to_end(key)
@@ -41,7 +41,12 @@ class LRUCache:
             self.log.debug(msg=f"[{old_key}={old_value}]")
 
     def __repr__(self) -> str:
-        self.log.debug(msg="Called __repr__")
-        return f"LRUCache (capacity {self.capacity}); cache=[" + ", ".join(
-            (f"{key}={value}" for key, value in self.cache.items())
-        ) + "]"
+        stringview = (
+            f"LRUCache (capacity {self.capacity}); cache=["
+            + ", ".join(
+                (f"{key}={value}" for key, value in self.cache.items())
+            )
+            + "]"
+        )
+        self.log.debug(msg=f"Cache state {stringview}")
+        return stringview
